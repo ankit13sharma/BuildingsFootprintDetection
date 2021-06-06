@@ -118,28 +118,30 @@ def apply_fetch_all_tiles(filepath,img_id,tile_id,y_coord,x_coord,steps, unique_
 
 def fetch_tiles_at_random(start_w, start_h, w,h, wmargin, hmargin, starting_tile_id ,number_of_tiles, image_id):
     
-    np.random.seed(440+i)
+    np.random.seed(440+image_id)
     y_coord = list(np.squeeze(np.random.randint(start_h,(h-hmargin),size=(number_of_tiles,1)).astype(np.float64)))
-    np.random.seed(494+i)
+    np.random.seed(494+image_id)
     x_coord = list(np.squeeze(np.random.randint(start_w,(w-wmargin),size=(number_of_tiles,1)).astype(np.float64)))
     tile_id = list(np.squeeze(np.arange(starting_tile_id,number_of_tiles,1).reshape(number_of_tiles,1)))
     img_id = list(np.squeeze(np.zeros((number_of_tiles,1),dtype=np.uint8)+image_id))
 
     return img_id,tile_id,y_coord,x_coord
 
-def apply_fetch_tiles_at_random(filepath,img_id,tile_id,y_coord,x_coord,starting_tile_id,number_of_tiles, unique_id):
+def apply_fetch_tiles_at_random(filepath,img_id,tile_id,y_coord,x_coord,starting_tile_id,number_of_tiles, unique_id,size = 256):
     raster = gdal.Open(filepath)
     w,h = round(raster.RasterXSize), round(raster.RasterYSize)
     
     raster = None
-
-    img_id1,tile_id1,y_coord1,x_coord1 = fetch_tiles_at_random(0,0, w, h,size,size,starting_tile_id,number_of_tiles,unique_id)   
-    
-    img_id.extend(img_id1)
-    tile_id.extend(tile_id1)
-    y_coord.extend(y_coord1)
-    x_coord.extend(x_coord1)
-    
+    try:
+        img_id1,tile_id1,y_coord1,x_coord1 = fetch_tiles_at_random(0,0, w, h,size,size,starting_tile_id,number_of_tiles,unique_id)   
+    except:
+        print("skipping to select tiles at random")
+    else:
+        img_id.extend(img_id1)
+        tile_id.extend(tile_id1)
+        y_coord.extend(y_coord1)
+        x_coord.extend(x_coord1)
+   
     return img_id,tile_id,y_coord,x_coord
 
 
