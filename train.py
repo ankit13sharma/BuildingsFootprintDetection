@@ -88,8 +88,6 @@ def image_generator(image_path,label_path,image_id,tile_id,y_coord,x_coord, batc
     current_image_id = 0
     while (current_image_id<total_images):
         
-        random.shuffle(all_images_id)
-        
         batch_input = np.zeros((batch,size,size,3))
         batch_output = np.zeros((batch,size,size,1))
         
@@ -109,7 +107,8 @@ def image_generator(image_path,label_path,image_id,tile_id,y_coord,x_coord, batc
             batch_output[batch_index,:,:,:]= raster2arr(raster,1,x,y,size)*255
             raster = None  
             
-        current_image_id += 1
+            current_image_id += 1
+        
         return (com_gen(batch_input, batch_output,isAugment))
 
 def dev_test_generator(image_path,label_path,image_id,tile_id,y_coord,x_coord, batch):    
@@ -150,8 +149,6 @@ def dev_test_generator(image_path,label_path,image_id,tile_id,y_coord,x_coord, b
     current_image_id = 0
     while (current_image_id<total_images):
         
-        random.shuffle(all_images_id)
-        
         batch_input = np.zeros((batch,size,size,3))
         batch_output = np.zeros((batch,size,size,1))
         
@@ -171,7 +168,8 @@ def dev_test_generator(image_path,label_path,image_id,tile_id,y_coord,x_coord, b
             batch_output[batch_index,:,:,:]= raster2arr(raster,1,x,y,size)*255
             raster = None  
             
-        current_image_id += 1
+            current_image_id += 1
+       
         return (com_gen(batch_input, batch_output))
 
 

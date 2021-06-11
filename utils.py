@@ -172,4 +172,3 @@ def dice(y_true, y_pred):
  
 def dice_loss(y_true, y_pred,ncl = 1.0):
     return (ncl-dice(y_true, y_pred))
-
