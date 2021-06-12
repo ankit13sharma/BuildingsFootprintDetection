@@ -72,8 +72,8 @@ def image_generator(image_path,label_path,image_id,tile_id,y_coord,x_coord, batc
         
         image_datagen = ImageDataGenerator(**data_gen_args)
         mask_datagen = ImageDataGenerator(**data_gen_args)
-        image_datagen.fit(image, augment=isAugment, rounds=1, seed=42)
-        mask_datagen.fit(label, augment=isAugment, rounds=1, seed=42)
+#         image_datagen.fit(image, augment=isAugment, rounds=1, seed=42)
+#         mask_datagen.fit(label, augment=isAugment, rounds=1, seed=42)
         image_generator = image_datagen.flow(image, batch_size=1, seed=42)
         mask_generator = mask_datagen.flow(label, batch_size=1, seed=42)
         
@@ -234,10 +234,10 @@ def unet(size, lri, input_height = size, input_width = size, nClasses = 1):
     pool4 = MaxPooling2D(pool_size=(2, 2))(bn42)
    
     conv5 = Conv2D(n*16, (3,3), kernel_regularizer=l2(lmbd), activation = 'relu', padding = 'same', data_format= "channels_last", kernel_initializer ='he_normal')(pool4)
-    drop5 = Dropout(drate5)(conv5)
+    drop5 = Dropout(drate4)(conv5)
     bn51 = ( BatchNormalization())(drop5) 
     conv5 = Conv2D(n*16, (3,3), kernel_regularizer=l2(lmbd), activation = 'relu', padding = 'same', data_format= "channels_last", kernel_initializer ='he_normal')(bn51)
-    drop52 = Dropout(drate4)(conv5)
+    drop52 = Dropout(drate5)(conv5)
     bn52 = ( BatchNormalization())(drop52) 
     
     up6 = Conv2D(n*8, (2,2), kernel_regularizer=l2(lmbd), activation = 'relu', padding = 'same',data_format= "channels_last",  kernel_initializer ='he_normal')(UpSampling2D(size = (2,2))(bn52))
@@ -319,7 +319,7 @@ def fetch_tiles_info(ipath):
 # In[5]:
 
 
-def training(train_generator,val_generator,steps_train,steps_val,epoch =50,size=256,seed = 23):
+def training(train_generator,val_generator,steps_train,steps_val,lri = 1e-3,epoch =50,size=256,seed = 23):
     
     K.clear_session()
              
@@ -327,14 +327,13 @@ def training(train_generator,val_generator,steps_train,steps_val,epoch =50,size=
     
     np.random.seed(seed)
     tf.compat.v1.set_random_seed(seed)
-    lri = 1e-3
 
     model = unet(size, lri)
     model.summary()
     
     checkpoint = ModelCheckpoint("./model_1.h5", monitor='val_dice', verbose=1, save_best_only=True, save_weights_only=False, mode='max', peroid=1)
     
-    early = EarlyStopping(monitor='val_dice', min_delta=0, patience=20, verbose=1, mode='auto')
+    early = EarlyStopping(monitor='val_dice', min_delta=0, patience=50, verbose=1, mode='max')
     history = model.fit(train_generator, steps_per_epoch = steps_train, epochs = epoch ,verbose = 2, callbacks = [checkpoint, early], validation_data= val_generator, validation_steps = steps_val)    
     
 

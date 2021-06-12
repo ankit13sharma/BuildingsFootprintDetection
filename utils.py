@@ -146,7 +146,7 @@ def apply_fetch_tiles_at_random(filepath,img_id,tile_id,y_coord,x_coord,starting
 
 
 def iou(y_true, y_pred):
-    smooth = 1
+    smooth = 1e-6
     intersection = K.sum((y_true * y_pred), axis = (0,1,2,3))
     union = K.sum((y_true + y_pred), axis = (0,1,2,3)) - K.sum((y_true * y_pred), axis = (0,1,2,3))
     
@@ -161,7 +161,7 @@ def iou_loss(y_true, y_pred,ncl = 1.0):
 
  
 def dice(y_true, y_pred):
-    smooth1 = 1
+    smooth1 = 1e-6
     
     num1 = K.sum((y_true *  y_pred), axis = (0,1,2,3))
     dnm1 = K.sum((y_true +  y_pred), axis = (0,1,2,3))     
