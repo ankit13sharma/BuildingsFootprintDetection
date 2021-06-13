@@ -6,10 +6,13 @@
 
 from osgeo import gdal
 import numpy as np
+import cv2 as cv
 import random
 import os
 import re
+import tensorflow as tf
 from tensorflow.keras import backend as K
+
 
 def shuffle_list(*ls, seeds =78):
   random.seed(seeds)
@@ -112,7 +115,7 @@ def apply_fetch_all_tiles(filepath,img_id,tile_id,y_coord,x_coord,steps, unique_
     y_coord.extend(y_coord1)
     x_coord.extend(x_coord1)
     
-    return img_id,tile_id,y_coord,x_coord
+    return img_id,tile_id,y_coord,x_coord,len(img_id1)
 
 
 
@@ -122,9 +125,9 @@ def fetch_tiles_at_random(start_w, start_h, w,h, wmargin, hmargin, starting_tile
     y_coord = list(np.squeeze(np.random.randint(start_h,(h-hmargin),size=(number_of_tiles,1)).astype(np.float64)))
     np.random.seed(494+image_id)
     x_coord = list(np.squeeze(np.random.randint(start_w,(w-wmargin),size=(number_of_tiles,1)).astype(np.float64)))
-    tile_id = list(np.squeeze(np.arange(starting_tile_id,number_of_tiles,1).reshape(number_of_tiles,1)))
+    tile_id = list(np.squeeze(np.arange(starting_tile_id,starting_tile_id+number_of_tiles,1).reshape(number_of_tiles,1)))
     img_id = list(np.squeeze(np.zeros((number_of_tiles,1),dtype=np.uint8)+image_id))
-
+    print("image: {}, number of random crops: {}".format(image_id,number_of_tiles))
     return img_id,tile_id,y_coord,x_coord
 
 def apply_fetch_tiles_at_random(filepath,img_id,tile_id,y_coord,x_coord,starting_tile_id,number_of_tiles, unique_id,size = 256):
@@ -134,8 +137,9 @@ def apply_fetch_tiles_at_random(filepath,img_id,tile_id,y_coord,x_coord,starting
     raster = None
     try:
         img_id1,tile_id1,y_coord1,x_coord1 = fetch_tiles_at_random(0,0, w, h,size,size,starting_tile_id,number_of_tiles,unique_id)   
-    except:
+    except Exception as e:
         print("skipping to select tiles at random")
+        print(e)
     else:
         img_id.extend(img_id1)
         tile_id.extend(tile_id1)
@@ -143,6 +147,26 @@ def apply_fetch_tiles_at_random(filepath,img_id,tile_id,y_coord,x_coord,starting
         x_coord.extend(x_coord1)
    
     return img_id,tile_id,y_coord,x_coord
+
+def break_image_in_quarters(image_path,outpath,factor):
+    raster = gdal.Open(image_path)
+    w,h = round(raster.RasterXSize), round(raster.RasterYSize)
+    bands = raster.RasterCount
+    if bands>1:
+        image = cv.cvtColor((utils.raster2array(raster,bands,0,0,w,h)).astype(np.uint8),cv.COLOR_RGB2BGR)
+    else:
+        image = (factor*utils.raster2array(raster,bands,0,0,w,h)).astype(np.uint8)
+    raster = None 
+
+    image1 = image[:h//2,:w//2,:]
+    image2 = image[:h//2,w//2:,:]
+    image3 = image[h//2:,:w//2,:]
+    image4 = image[h//2:,w//2:,:]
+
+    cv.imwrite(outpath.format(1), (image1).astype(np.uint8))              
+    cv.imwrite(outpath.format(2), (image2).astype(np.uint8))              
+    cv.imwrite(outpath.format(3), (image3).astype(np.uint8))              
+    cv.imwrite(outpath.format(4), (image4).astype(np.uint8))              
 
 
 def iou(y_true, y_pred):
@@ -172,3 +196,8 @@ def dice(y_true, y_pred):
  
 def dice_loss(y_true, y_pred,ncl = 1.0):
     return (ncl-dice(y_true, y_pred))
+
+def dice_bce_loss(y_true, y_pred,ncl = 1.0):
+    bce = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+
+    return dice_loss(y_true, y_pred)+bce(y_true, y_pred)

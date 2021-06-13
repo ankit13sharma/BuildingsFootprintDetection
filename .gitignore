@@ -4,3 +4,4 @@ predict.ipynb
 model_1.h5
 training.ipynb
 training.ipynb
+*.h5

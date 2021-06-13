@@ -309,9 +309,9 @@ def fetch_tiles_info(ipath):
 
 
     for i in range(len(ipath)):
-        img_id,tile_id,y_coord,x_coord = utils.apply_fetch_all_tiles(ipath[i],img_id,tile_id,y_coord,x_coord,1,i)
+        img_id,tile_id,y_coord,x_coord,num_tiles = utils.apply_fetch_all_tiles(ipath[i],img_id,tile_id,y_coord,x_coord,1,i)
         
-        img_id,tile_id,y_coord,x_coord = utils.apply_fetch_tiles_at_random(ipath[i],img_id,tile_id,y_coord,x_coord,len(img_id),len(img_id),i)
+        img_id,tile_id,y_coord,x_coord = utils.apply_fetch_tiles_at_random(ipath[i],img_id,tile_id,y_coord,x_coord,num_tiles,num_tiles,i)
     
     return img_id,tile_id,y_coord,x_coord
 
@@ -319,17 +319,12 @@ def fetch_tiles_info(ipath):
 # In[5]:
 
 
-def training(train_generator,val_generator,steps_train,steps_val,lri = 1e-3,epoch =50,size=256,seed = 23):
-    
-    K.clear_session()
+def training(model,train_generator,val_generator,steps_train,steps_val,lri = 1e-3,epoch =50,size=256,seed = 23):
              
     K.set_image_data_format('channels_last')
     
     np.random.seed(seed)
     tf.compat.v1.set_random_seed(seed)
-
-    model = unet(size, lri)
-    model.summary()
     
     checkpoint = ModelCheckpoint("./model_1.h5", monitor='val_dice', verbose=1, save_best_only=True, save_weights_only=False, mode='max', peroid=1)
     
